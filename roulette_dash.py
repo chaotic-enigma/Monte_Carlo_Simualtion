@@ -11,14 +11,12 @@ def category_guess(num, category):
 		'b' : [2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35],
 		'r' : [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]
 	}
-
 	whole = []
 	for i,j in roulette.items():
 		for k in j:
 			rb = {}
 			rb.update({i : k})
 			whole.append(rb)
-
 	for table in whole:
 		for k, v in table.items():
 			if num == v and category == k:
@@ -30,7 +28,6 @@ def even_property(num):
 
 spin_wheel = range(0, 37)
 table_guess = range(1 ,37)
-
 category = ['even', 'odd']
 
 def exact_guessing():
@@ -38,7 +35,6 @@ def exact_guessing():
 	dozen1_even = range(1, 13)
 	dozen2_r_b = range(13, 25)
 	dozen3_odd = range(25, 37)
-
 	guess_num = random.choice(table_guess)
 
 	if guess_num in dozen1_even:
@@ -56,7 +52,6 @@ def exact_guessing():
 			else:
 				#print('guessed number is {} (odd) belongs to {}'.format(guess_num, color[1]))
 				return guess_num
-
 	elif guess_num in dozen2_r_b:
 		if category_guess(guess_num, color[0]):
 			if even_property(guess_num):
@@ -72,7 +67,6 @@ def exact_guessing():
 			else:
 				#print('guessed number is {} (odd) belongs to {}'.format(guess_num, color[1]))
 				return guess_num
-
 	elif guess_num in dozen3_odd:
 		if category_guess(guess_num, color[0]):
 			if not even_property(guess_num):
@@ -88,7 +82,6 @@ def exact_guessing():
 			else:
 				#print('guessed number is {} (even) belongs to {}'.format(guess_num, color[1]))
 				return guess_num
-
 	else:
 		print('guessed number is 0')
 		return 0
@@ -117,13 +110,8 @@ def gambling_roulette(total_betting, initial_betting, chances):
 
 	if outcome_amt < 0:
 		outcome_amt = 'broke'
-
 	#print('Amount Left: {}'.format(outcome_amt))
-
 	return wx, vy
-
-# for i in range(100):
-# 	gambling_roulette(10000, 100, 100)
 
 def martingale_strategy(total_betting, initial_betting, chances):
 	outcome_amt = total_betting
@@ -168,12 +156,66 @@ def martingale_strategy(total_betting, initial_betting, chances):
 				vy.append(outcome_amt)
 
 		turns += 1
-
 	#print('Amount Left: {}'.format(outcome_amt))
+	return wx, vy
+
+def dAlembert_strategy(total_betting, initial_betting, chances):
+	outcome_amt = total_betting
+	wager_betting = initial_betting
+
+	previous_turn = 'win'
+	previous_turn_amt = initial_betting
+	strategy = initial_betting
+
+	wx = []
+	vy = []
+
+	turns = 1
+	while turns < chances:
+		ball = random.choice(spin_wheel)
+		if previous_turn == 'win':
+			if wager_betting == initial_betting:
+				pass
+			else:
+				wager_betting -= initial_betting
+			#print('current {} value {}'.format(wager_betting, outcome_amt))
+			if ball == exact_guessing():
+				outcome_amt += wager_betting
+				#print('win {}'.format(outcome_amt))
+				previous_turn_amt = wager_betting
+				wx.append(turns)
+				vy.append(outcome_amt)
+			else:
+				outcome_amt -= wager_betting
+				#print('lose {}'.format(outcome_amt))
+				previous_turn = 'lose'
+				previous_turn_amt = wager_betting
+				wx.append(turns)
+				vy.append(outcome_amt)
+				if outcome_amt <= 0:
+					break
+		elif previous_turn == 'lose':
+			wager_betting = previous_turn_amt + initial_betting
+			#print('lost the last bet {} value {}'.format(wager_betting ,outcome_amt))
+			if ball == exact_guessing():
+				outcome_amt += wager_betting
+				#print('win2 {}'.format(outcome_amt))
+				previous_turn_amt = wager_betting
+				previous_turn = 'win'
+				wx.append(turns)
+				vy.append(outcome_amt)
+			else:
+				outcome_amt -= wager_betting
+				#print('lose2 {}'.format(outcome_amt))
+				previous_turn_amt = wager_betting
+				if outcome_amt <= 0:
+					break
+		turns += 1
 	return wx, vy
 
 wx1, vy1 = gambling_roulette(10000, 10, 100)
 wx2, vy2 = martingale_strategy(10000, 10, 100)
+wx3, vy3 = dAlembert_strategy(10000, 10 ,100)
 
 app.layout = html.Div([
 	dcc.Graph(
@@ -181,7 +223,8 @@ app.layout = html.Div([
 		figure={
 			'data' : [
 				{'x' : wx1, 'y' : vy1, 'type' : 'line', 'name' : 'gambling_roulette'},
-				{'x' : wx2, 'y' : vy2, 'type' : 'line', 'name' : 'martingale_strategy'}
+				{'x' : wx2, 'y' : vy2, 'type' : 'line', 'name' : 'martingale_strategy'},
+				{'x' : wx3, 'y' : vy3, 'type' : 'line', 'name' : 'dAlembert_strategy'}
 			],
 			'layout' : {'title' : 'Monte Carlo Simulation (roulette guess game)'}
 		}

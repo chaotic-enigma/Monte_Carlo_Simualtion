@@ -174,13 +174,66 @@ def martingale_strategy(total_betting, initial_betting, chances):
 				vy.append(outcome_amt)
 
 		turns += 1
-
 	#print('Amount Left: {}'.format(outcome_amt))
-
 	plt.plot(wx, vy, 'orange')
+
+def dAlembert_strategy(total_betting, initial_betting, chances):
+	outcome_amt = total_betting
+	wager_betting = initial_betting
+
+	previous_turn = 'win'
+	previous_turn_amt = initial_betting
+	strategy = initial_betting
+
+	wx = []
+	vy = []
+
+	turns = 1
+	while turns < chances:
+		ball = random.choice(spin_wheel)
+		if previous_turn == 'win':
+			if wager_betting == initial_betting:
+				pass
+			else:
+				wager_betting -= initial_betting
+			#print('current {} value {}'.format(wager_betting, outcome_amt))
+			if ball == exact_guessing():
+				outcome_amt += wager_betting
+				#print('win {}'.format(outcome_amt))
+				previous_turn_amt = wager_betting
+				wx.append(turns)
+				vy.append(outcome_amt)
+			else:
+				outcome_amt -= wager_betting
+				#print('lose {}'.format(outcome_amt))
+				previous_turn = 'lose'
+				previous_turn_amt = wager_betting
+				wx.append(turns)
+				vy.append(outcome_amt)
+				if outcome_amt <= 0:
+					break
+		elif previous_turn == 'lose':
+			wager_betting = previous_turn_amt + initial_betting
+			#print('lost the last bet {} value {}'.format(wager_betting ,outcome_amt))
+			if ball == exact_guessing():
+				outcome_amt += wager_betting
+				#print('win2 {}'.format(outcome_amt))
+				previous_turn_amt = wager_betting
+				previous_turn = 'win'
+				wx.append(turns)
+				vy.append(outcome_amt)
+			else:
+				outcome_amt -= wager_betting
+				#print('lose2 {}'.format(outcome_amt))
+				previous_turn_amt = wager_betting
+				if outcome_amt <= 0:
+					break
+		turns += 1
+	plt.plot(wx, vy, 'g')
 
 for i in range(100):
 	gambling_roulette(10000, 100, 100)
 	martingale_strategy(10000, 100, 100)
+	dAlembert_strategy(10000, 100, 100)
 
 plt.show()	
